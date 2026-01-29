@@ -1,0 +1,32 @@
+node_modules/
+.env
+.DS_Store
+dist/
+build/
+
+# Python
+*.py[cod]
+__pycache__/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+venv/
+.venv
+.venv*/
+backend/venv/
+backend/.venv*/
+backend/.venv311/
+
+# Redis dump
+dump.rdb
+
+# Editor
+.vscode/
+
+# Frontend
+frontend/node_modules/
+frontend/build/
+
+
