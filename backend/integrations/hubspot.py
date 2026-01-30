@@ -140,7 +140,21 @@ async def get_hubspot_credentials(user_id: str, org_id: str) -> Dict[str, Any]:
 # Fetch HubSpot Contacts
 # =====================
 async def get_items_hubspot(credentials: Dict[str, Any]) -> List[Dict[str, Any]]:
-    access_token = credentials.get("access_token")
+    # credentials may be passed as a JSON string (from a form), as a raw
+    # token string (frontend may store just the token), or as a dict.
+    if isinstance(credentials, str):
+        try:
+            # JSON-encoded value could be a dict or a raw string (e.g. '"tok"')
+            parsed = json.loads(credentials)
+        except Exception:
+            parsed = credentials
+        credentials = parsed
+
+    if isinstance(credentials, dict):
+        access_token = credentials.get("access_token")
+    else:
+        # treat the value itself as the access token (covers raw token strings)
+        access_token = credentials
     if not access_token:
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
