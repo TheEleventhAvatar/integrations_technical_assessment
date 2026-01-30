@@ -1,6 +1,6 @@
 # Integrations Technical Assessment — Local Run & HubSpot Setup
 
-This repository contains a small React frontend and a FastAPI backend that demonstrate integrations (Airtable, Notion, HubSpot).
+This repository contains a small React frontend and a FastAPI backend that demonstrate integration to HubSpot
 
 This README documents how to run the project locally and how to test the HubSpot OAuth flow (you mentioned you already added CLIENT_ID/CLIENT_SECRET and redirect URI).
 
@@ -89,7 +89,7 @@ curl -X POST -F "credentials=$(cat token.json)" http://127.0.0.1:8000/integratio
 This returns a JSON array of `IntegrationItem` objects (contacts by default).
 
 ## Notes & Next steps
-- `get_items_hubspot` currently fetches HubSpot contacts and maps each to the shared `IntegrationItem` shape. Feel free to extend it to deals/companies and include more fields.
+
 - For production, move client secrets to environment variables and protect Redis.
 - If you'd like, I can push these changes to the remote repo or add instructions into a CONTRIBUTING.md / developer script to automate venv creation.
 
