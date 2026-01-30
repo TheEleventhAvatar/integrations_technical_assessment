@@ -75,3 +75,15 @@ async def get_hubspot_credentials_integration(user_id: str = Form(...), org_id: 
 @app.post('/integrations/hubspot/get_hubspot_items')
 async def load_slack_data_integration(credentials: str = Form(...)):
     return await get_items_hubspot(credentials)
+
+
+# Debug endpoint (local/dev only) to inspect stored hubspot credentials/state
+@app.get('/integrations/hubspot/debug')
+async def hubspot_debug(user_id: str, org_id: str):
+    from redis_client import get_value_redis
+    state = await get_value_redis(f'hubspot_state:{org_id}:{user_id}')
+    creds = await get_value_redis(f'hubspot_credentials:{org_id}:{user_id}')
+    return {
+        'state_key': state,
+        'credentials_key': creds,
+    }
