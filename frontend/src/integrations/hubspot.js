@@ -1,7 +1,7 @@
 // hubspot.js
 
 import { useState, useEffect } from 'react'
-import { Box, Button, CircularProgress } from '@mui/material'
+import { Box, Button, CircularProgress, List, ListItem, ListItemText, Typography } from '@mui/material'
 import axios from 'axios'
 
 export const HubSpotIntegration = ({
@@ -12,6 +12,7 @@ export const HubSpotIntegration = ({
 }) => {
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [items, setItems] = useState([]) // demo items
 
   const handleConnectClick = async () => {
     try {
@@ -26,7 +27,9 @@ export const HubSpotIntegration = ({
         formData
       )
 
-      const authURL = res.data
+      const authURL = res.data.auth_url
+      if (!authURL) throw new Error('No auth URL returned')
+
       const popup = window.open(authURL, 'HubSpot Auth', 'width=600,height=600')
 
       const timer = setInterval(() => {
@@ -52,14 +55,9 @@ export const HubSpotIntegration = ({
         formData
       )
 
-      /**
-       * 🔑 IMPORTANT
-       * Store ONLY access_token as credentials
-       */
+      // 🔑 Store only access_token for demo
       const accessToken = res.data?.access_token
-      if (!accessToken) {
-        throw new Error('Invalid HubSpot credentials')
-      }
+      if (!accessToken) throw new Error('Invalid HubSpot credentials')
 
       setIntegrationParams(prev => ({
         ...prev,
@@ -69,23 +67,39 @@ export const HubSpotIntegration = ({
 
       setIsConnected(true)
       setIsConnecting(false)
+
+      // ✅ Fetch demo items after OAuth
+      fetchDemoItems()
+
     } catch (e) {
       setIsConnecting(false)
       alert(e?.response?.data?.detail || e.message)
     }
   }
 
-  /**
-   * ✅ Correct dependency
-   * React + runtime both fixed
-   */
+  const fetchDemoItems = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8000/integrations/hubspot/items?user_id=${encodeURIComponent(user)}&org_id=${encodeURIComponent(org)}`
+      )
+
+      setItems(res.data || [])
+    } catch (e) {
+      console.error('Failed to fetch HubSpot items', e)
+    }
+  }
+
   useEffect(() => {
     setIsConnected(Boolean(integrationParams?.credentials))
+    if (integrationParams?.credentials) {
+      fetchDemoItems()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [integrationParams?.credentials])
 
   return (
     <Box sx={{ mt: 2 }}>
-      Parameters
+      <Typography variant="subtitle1">HubSpot Integration</Typography>
       <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
         <Button
           variant="contained"
@@ -100,6 +114,24 @@ export const HubSpotIntegration = ({
             : 'Connect to HubSpot'}
         </Button>
       </Box>
+
+      {items.length > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="h6">HubSpot Items (Demo)</Typography>
+          <List>
+            {items.map((item, idx) => (
+              <ListItem key={idx} divider>
+                <ListItemText
+                  primary={item.name}
+                  secondary={Object.entries(item.parameters)
+                    .map(([key, val]) => `${key}: ${val}`)
+                    .join(', ')}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      )}
     </Box>
   )
 }
