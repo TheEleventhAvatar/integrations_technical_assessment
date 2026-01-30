@@ -2,7 +2,7 @@
 
 This repository contains a small React frontend and a FastAPI backend that demonstrate integration to HubSpot
 
-This README documents how to run the project locally and how to test the HubSpot OAuth flow (you mentioned you already added CLIENT_ID/CLIENT_SECRET and redirect URI).
+This README documents how to run the project locally and how to test the HubSpot OAuth flow and data load.
 
 ## Prerequisites
 - Python 3.11 (the project uses a venv created with python3.11)
