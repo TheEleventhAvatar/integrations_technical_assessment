@@ -5,6 +5,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse
 
 from redis_client import add_key_value_redis, get_value_redis, delete_key_redis
+from integrations.integration_item import IntegrationItem
 
 # Replace these with your actual HubSpot App credentials
 CLIENT_ID = 'YOUR_HUBSPOT_CLIENT_ID'
@@ -95,6 +96,44 @@ async def get_items_hubspot(credentials) -> list:
             credentials = json.loads(credentials)
     except Exception:
         credentials = {}
+    access_token = credentials.get('access_token') if isinstance(credentials, dict) else None
+    if not access_token:
+        return []
 
-    # TODO: implement actual HubSpot calls using credentials.get('access_token')
-    return []
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+    items = []
+    async with httpx.AsyncClient() as client:
+        # Fetch contacts as an example; you can extend to deals, companies, etc.
+        try:
+            resp = await client.get('https://api.hubapi.com/crm/v3/objects/contacts?limit=100', headers=headers, timeout=30.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                for r in data.get('results', []):
+                    props = r.get('properties', {})
+                    name = None
+                    # Build a reasonable display name
+                    if props.get('firstname') or props.get('lastname'):
+                        name = f"{props.get('firstname','')} {props.get('lastname','')}".strip()
+                    elif props.get('email'):
+                        name = props.get('email')
+                    else:
+                        name = r.get('id')
+
+                    item = IntegrationItem(
+                        id=r.get('id'),
+                        type='Contact',
+                        name=name,
+                        parent_id=None,
+                        parent_path_or_name=None,
+                        url=None,
+                    )
+                    items.append(item)
+        except Exception:
+            # If the call fails, return what we have (likely empty)
+            return items
+
+    return items
