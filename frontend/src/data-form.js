@@ -14,17 +14,23 @@ const endpointMapping = {
 
 export const DataForm = ({ integrationType, credentials }) => {
     const [loadedData, setLoadedData] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const endpoint = endpointMapping[integrationType];
 
     const handleLoad = async () => {
         try {
+            setIsLoading(true);
             const formData = new FormData();
             formData.append('credentials', JSON.stringify(credentials));
             const response = await axios.post(`http://localhost:8000/integrations/${endpoint}/load`, formData);
             const data = response.data;
-            setLoadedData(data);
+            // display as pretty JSON in the UI
+            setLoadedData(JSON.stringify(data, null, 2));
+            setIsLoading(false);
         } catch (e) {
-            alert(e?.response?.data?.detail);
+            setIsLoading(false);
+            const detail = e?.response?.data ?? e?.message ?? JSON.stringify(e);
+            alert('Load error: ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)));
         }
     }
 
@@ -37,13 +43,15 @@ export const DataForm = ({ integrationType, credentials }) => {
                     sx={{mt: 2}}
                     InputLabelProps={{ shrink: true }}
                     disabled
+                    multiline
+                    minRows={6}
                 />
                 <Button
                     onClick={handleLoad}
                     sx={{mt: 2}}
                     variant='contained'
                 >
-                    Load Data
+                    {isLoading ? 'Loading...' : 'Load Data'}
                 </Button>
                 <Button
                     onClick={() => setLoadedData(null)}
